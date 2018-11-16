@@ -13,15 +13,15 @@
 export function setupProperInstantiation(server, store) {
   return (modelName, hash, overrides) => {
     const mirageInstance = server.create(modelName, hash);
-    const mirageInstanceNormalized = server.serializerOrRegistry.serialize(mirageInstance);
+    const mirageInstanceSerialized = server.serializerOrRegistry.serialize(mirageInstance);
     let emberDataInstance;
 
     if (overrides && overrides.emberDataModelName) {
       // if the mirage model name doesn't match the ember-data model name
       // like how Mirage doesn't support models in sub-folders
-      emberDataInstance = store.push(store.normalize(overrides.emberDataModelName, mirageInstanceNormalized));
+      emberDataInstance = store.push(store.normalize(overrides.emberDataModelName, mirageInstanceSerialized));
     } else {
-      emberDataInstance = store.push(store.normalize(modelName, mirageInstanceNormalized));
+      emberDataInstance = store.push(store.normalize(modelName, mirageInstanceSerialized));
     }
     return emberDataInstance;
   };

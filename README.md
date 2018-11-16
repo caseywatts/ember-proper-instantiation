@@ -27,7 +27,9 @@ Here's a shortcut to doing it (this repo). These two files are the main ones to 
 
 
 #### Usage example
-```
+(side note: this is using the modern test setup `setupRenderingTest` from [ember-qunit](https://github.com/emberjs/ember-qunit))
+
+```javascript
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
@@ -59,6 +61,21 @@ module('UsersListComponent', function(hooks) {
     assert.ok(this.element.innerHTML.includes('Joe Schmo'));
   });
 });
+```
+
+### setupProperInstantiation (simplified)
+Check out the fuller version [here](https://github.com/caseywatts/ember-proper-instantiation/blob/master/tests/helpers/setup-proper-instantiation.js)
+
+```javascript
+export function setupProperInstantiation(server, store) {
+  return (modelName, hash, overrides) => {
+    const mirageInstance = server.create(modelName, hash);
+    const mirageInstanceSerialized = server.serializerOrRegistry.serialize(mirageInstance);
+    const emberDataInstance = store.push(store.normalize(modelName, mirageInstanceSerialized));
+
+    return emberDataInstance;
+  };
+}
 ```
 
 ### What if we don't need/want the server?
