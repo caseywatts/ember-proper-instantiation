@@ -51,11 +51,12 @@ module('UsersListComponent', function(hooks) {
   }),
 
   test('renders', async function(assert) {
-    const users = [this.properInstantiation('user', {
+    // properInstantiation() has the same signature as mirage's server.create()
+    const users = this.properInstantiation('user', {
       firstName: 'Joe',
       lastName: 'Schmo'
-    })];
-    this.set('users', users)
+    });
+    this.set('users', [user])
     await render(hbs`{{user-list users=users}}`);
 
     assert.ok(this.element.innerHTML.includes('Joe Schmo'));
