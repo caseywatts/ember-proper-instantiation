@@ -1,57 +1,65 @@
-# proper-instantiation
+### Scenario
+Imagine you have a component that you want to test, and it does some or all of these things:
+- depends on models' computed properties*
+- loads other records through ember-data relationships (hitting the server)
+- loads other records through the init hook (or other ways) (hitting the server)
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+Options include:
 
-## Prerequisites
+- Making an "Application" test (= "acceptance"). That's our go-to currently, but it is heavier than we need.
+  - There's a lot more context being loaded than needed.
+  - Also, if this component is used in many places in the app, should we test each of those places with a different acceptance test?
+- Stubbing things?
+- Or -  "Component" tests (= "integration"). If only we could set them up to have what they need! Here's one way 🙂
 
-You will need the following things properly installed on your computer.
+### How does it work?
 
-* [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/) (with npm)
-* [Ember CLI](https://ember-cli.com/)
-* [Google Chrome](https://google.com/chrome/)
+To get an ember-data instance from a mirage factory, we have to do four things:
 
-## Installation
+- generate the mirage instance
+- pass it through the mirage serializer (in particular to get relationships embedded)
+- pass it through `store.normalize()``
+- push this into the store - this returns an actual ember-data instance
 
-* `git clone <repository-url>` this repository
-* `cd proper-instantiation`
-* `npm install`
+Here's a shortcut to doing it (this repo). These two files are the main ones to check out:
+- [This Test](https://github.com/caseywatts/ember-proper-instantiation/blob/master/tests/integration/components/user-list-test.js) which shows an example of properInstantiation
+- [The setupProperInstantiation helper it uses](https://github.com/caseywatts/ember-proper-instantiation/blob/master/tests/helpers/setup-proper-instantiation.js)
 
-## Running / Development
 
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
-* Visit your tests at [http://localhost:4200/tests](http://localhost:4200/tests).
+#### Usage example
+```
+import { module, test } from 'qunit';
+import { setupRenderingTest } from 'ember-qunit';
+import { render } from '@ember/test-helpers';
+import hbs from 'htmlbars-inline-precompile';
+import { startMirage } from '../../../initializers/ember-cli-mirage';
+import { setupProperInstantiation } from '../../helpers/setup-proper-instantiation';
 
-### Code Generators
+module('UsersListComponent', function(hooks) {
+  setupRenderingTest(hooks);
 
-Make use of the many generators for code, try `ember help generate` for more details
+  hooks.beforeEach(function() {
+    this.server = startMirage();
+    this.store = this.owner.lookup('service:store');
+    this.properInstantiation = setupProperInstantiation(this.server, this.store);
+  }),
 
-### Running Tests
+  hooks.afterEach(function() {
+    this.server.shutdown();
+  }),
 
-* `ember test`
-* `ember test --server`
+  test('renders', async function(assert) {
+    const users = [this.properInstantiation('user', {
+      firstName: 'Joe',
+      lastName: 'Schmo'
+    })];
+    this.set('users', users)
+    await render(hbs`{{user-list users=users}}`);
 
-### Linting
+    assert.ok(this.element.innerHTML.includes('Joe Schmo'));
+  });
+});
+```
 
-* `npm run lint:hbs`
-* `npm run lint:js`
-* `npm run lint:js -- --fix`
-
-### Building
-
-* `ember build` (development)
-* `ember build --environment production` (production)
-
-### Deploying
-
-Specify what it takes to deploy your app.
-
-## Further Reading / Useful Links
-
-* [ember.js](https://emberjs.com/)
-* [ember-cli](https://ember-cli.com/)
-* Development Browser Extensions
-  * [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
-  * [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
+### What if we don't need/want the server?
+Sometimes we may be in this situation but we'd like it to be faster by skipping the server setup. In that case, I wish we could somehow use Mirage's factories without spinning up the entire server. Factory Guy as an alternative sorta does that - but then you have a different interface to learn, and an additional set of factories to maintain.
