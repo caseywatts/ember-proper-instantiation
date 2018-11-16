@@ -3,6 +3,7 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { startMirage } from '../../../initializers/ember-cli-mirage';
+import { setupProperInstantiation } from '../../helpers/setup-proper-instantiation';
 
 module('UsersListComponent', function(hooks) {
   setupRenderingTest(hooks);
@@ -10,6 +11,7 @@ module('UsersListComponent', function(hooks) {
   hooks.beforeEach(function() {
     this.server = startMirage();
     this.store = this.owner.lookup('service:store');
+    this.properInstantiation = setupProperInstantiation(this.server, this.store);
   }),
 
   hooks.afterEach(function() {
@@ -17,10 +19,10 @@ module('UsersListComponent', function(hooks) {
   }),
 
   test('renders', async function(assert) {
-    const users = [server.create('user', {
+    const users = [this.properInstantiation('user', {
       first_name: 'Joe',
       last_name: 'Schmo'
-    }).attrs];
+    })];
     this.set('users', users)
     await render(hbs`{{user-list users=users}}`);
     assert.ok(this.element.innerHTML.includes('Joe'));
