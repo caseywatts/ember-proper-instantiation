@@ -7,7 +7,11 @@ module('UsersListComponent', function(hooks) {
   setupRenderingTest(hooks);
 
   test('renders', async function(assert) {
-    await render(hbs`{{user-list}}`);
-    assert.ok(2 == 2);
+    const users = ['a', 'b'];
+    this.set('users', users)
+    await render(hbs`{{user-list users=users}}`);
+    
+    assert.ok(this.element.innerHTML.includes('a'));
+    assert.ok(this.element.innerHTML.includes('b'));
   });
 });
