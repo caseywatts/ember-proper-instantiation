@@ -9,6 +9,7 @@ module('UsersListComponent', function(hooks) {
 
   hooks.beforeEach(function() {
     this.server = startMirage();
+    this.store = this.owner.lookup('service:store');
   }),
 
   hooks.afterEach(function() {
@@ -16,11 +17,12 @@ module('UsersListComponent', function(hooks) {
   }),
 
   test('renders', async function(assert) {
-    const users = ['a', 'b'];
+    const users = [server.create('user', {
+      first_name: 'Joe',
+      last_name: 'Schmo'
+    }).attrs];
     this.set('users', users)
     await render(hbs`{{user-list users=users}}`);
-    
-    assert.ok(this.element.innerHTML.includes('a'));
-    assert.ok(this.element.innerHTML.includes('b'));
+    assert.ok(this.element.innerHTML.includes('Joe'));
   });
 });
