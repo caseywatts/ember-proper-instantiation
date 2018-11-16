@@ -20,11 +20,12 @@ module('UsersListComponent', function(hooks) {
 
   test('renders', async function(assert) {
     const users = [this.properInstantiation('user', {
-      first_name: 'Joe',
-      last_name: 'Schmo'
+      firstName: 'Joe',
+      lastName: 'Schmo'
     })];
     this.set('users', users)
     await render(hbs`{{user-list users=users}}`);
-    assert.ok(this.element.innerHTML.includes('Joe'));
+
+    assert.ok(this.element.innerHTML.includes('Joe Schmo'));
   });
 });
